@@ -5,8 +5,6 @@ api_key = 'AIzaSyA5Wm4XH80ajTTEHRe57rOYU-XVo1sQK9I'
 
 # URL base de la API de YouTube
 youtube = build('youtube', 'v3', developerKey=api_key)
-
-
 def obtener_comentarios_recientes(video_id, max_results=100):
     comentarios = []
     respuesta = youtube.commentThreads().list(
@@ -14,13 +12,16 @@ def obtener_comentarios_recientes(video_id, max_results=100):
         videoId= video_id,
         textFormat= 'plainText',
         maxResults= max_results,
-        order= 'time'
+        order='time'
     ).execute()
     for item in respuesta['items']:
        comentario = item['snippet']['topLevelComment']['snippet']['textDisplay']
        comentarios.append(comentario)
     return comentarios
 
-video_id ='AIYpdjQVidc'
+url = input("Introduce el link del video de YouTube a analizar ")
+partes = url.split("=")
+video_id= partes[1].split("&")[0]
+print(video_id)
 comentarios_recientes = obtener_comentarios_recientes(video_id)
 print(comentarios_recientes)
