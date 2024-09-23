@@ -40,7 +40,7 @@ def obtener_comentarios_recientes(video_id, max_results=10):
        comentarios.append(comentario)
     return comentarios
 
-url = st.text_input("Introduce el link del video de YouTube a analizar ") #Ejemplo https://www.youtube.com/watch?v=AIYpdjQVidc
+url = st.text_input("Introduce el link del video de YouTube a analizar ") #Ejemplo https://www.youtube.com/watch?v=-s7TCuCpB5c&list=RD-s7TCuCpB5c&start_radio=1
 print(url)
 partes = url.split("=")
 video_id= partes[1].split("&")[0]
