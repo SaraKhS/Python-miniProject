@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 import os
 import requests
 import time
+import streamlit as st
+import plotly.express as px
 
 load_dotenv()
 
@@ -10,6 +12,7 @@ load_dotenv()
 api_key = os.getenv('API_YOUTUBE')
 api_token = os.getenv('API_HuggingFace') # get yours at hf.co/settings/tokens
 
+st.title('Youtube comments analyzer')
 
 def query(payload, model_id, api_token):
 	headers = {"Authorization": f"Bearer {api_token}"}
@@ -23,7 +26,7 @@ model_id = "lxyuan/distilbert-base-multilingual-cased-sentiments-student"
 
 # URL base de la API de YouTube
 youtube = build('youtube', 'v3', developerKey=api_key)
-def obtener_comentarios_recientes(video_id, max_results=3):
+def obtener_comentarios_recientes(video_id, max_results=10):
     comentarios = []
     respuesta = youtube.commentThreads().list(
         part = 'snippet',
@@ -37,14 +40,15 @@ def obtener_comentarios_recientes(video_id, max_results=3):
        comentarios.append(comentario)
     return comentarios
 
-url = input("Introduce el link del video de YouTube a analizar ") #Ejemplo https://www.youtube.com/watch?v=AIYpdjQVidc
+url = st.text_input("Introduce el link del video de YouTube a analizar ") #Ejemplo https://www.youtube.com/watch?v=AIYpdjQVidc
+print(url)
 partes = url.split("=")
 video_id= partes[1].split("&")[0]
 print(video_id)
 comentarios_recientes = obtener_comentarios_recientes(video_id)
 #print(comentarios_recientes) 
-print(f"Comentarios recientes (formato): {type(comentarios_recientes)}")
-print(f"Primer comentario: {comentarios_recientes[0] if comentarios_recientes else 'No hay comentarios'}")
+#print(f"Comentarios recientes (formato): {type(comentarios_recientes)}")
+#print(f"Primer comentario: {comentarios_recientes[0] if comentarios_recientes else 'No hay comentarios'}")
 
 
 #print(data)
@@ -54,7 +58,7 @@ def analizar_comentarios(comentarios, model_id, api_token):
     for string in comentarios:
         data = query(string, model_id, api_token)  # Ejecutar la consulta de análisis de sentimientos
         print(data)   
-        time.sleep(2)    
+        time.sleep(0.1)    
         for item in data[0]:
                 all_data.append(item)
             # Pausa de 1 segundo para reducir la tasa de solicitudes
@@ -65,21 +69,30 @@ def analizar_comentarios(comentarios, model_id, api_token):
      
      #Suma de los datos
     positivos = df[df['label'] == 'positive']['score'].sum()
-    time.sleep(2)
+    time.sleep(0.1)
     negativos = df[df['label'] == 'negative']['score'].sum()
-    time.sleep(2)
+    time.sleep(0.1)
     neutro = df[df['label'] == 'neutral']['score'].sum()
-    time.sleep(2)
+    time.sleep(0.1)
 
      #Porcentajes de cada tipo
     p_positivos = positivos / total_comentarios
     p_negativos = negativos / total_comentarios
     p_neutro = neutro / total_comentarios
 
-     #resultados
-    print(f"Porcentaje de comentarios positivos: {p_positivos:.2f}%")
-    print(f"Porcentaje de comentarios negativos: {p_negativos:.2f}%")
-    print(f"Porcentaje de comentarios neutros: {p_neutro:.2f}%")   
+    #resultados
+    #print(f"Porcentaje de comentarios positivos: {p_positivos:.2f}%")
+    #print(f"Porcentaje de comentarios negativos: {p_negativos:.2f}%")
+    #print(f"Porcentaje de comentarios neutros: {p_neutro:.2f}%") 
+    df = pd.DataFrame({
+         'Tono' : ['Positivos', 'Negativos', 'Neutros'],
+         'Porcentaje' : [p_positivos, p_negativos, p_neutro] })  
+    time.sleep(1)
+    # Crear diagrama de tarta
+    fig = px.pie(df, values='Porcentaje', names='Tono', title='Distribución de Sentimientos')
+
+    # Mostrar gráfico en Streamlit
+    st.plotly_chart(fig)
 
 
 analizar_comentarios(comentarios_recientes, model_id, api_token)
